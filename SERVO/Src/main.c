@@ -44,7 +44,7 @@
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
-uint8_t Degree = 100;
+uint8_t Degree = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -52,6 +52,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
+void Servo_SetAngle(uint8_t angle);
 
 /* USER CODE END PFP */
 
@@ -90,7 +91,7 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
-	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -100,7 +101,16 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		__HAL_TIM_SET_CAPTUREPOLARITY(&htim4, TIM_CHANNEL_1, 200);
+    for (Degree = 0; Degree < 180; Degree += 10)
+    {
+      Servo_SetAngle(Degree);
+      HAL_Delay(100);
+    }
+    for (Degree = 180; Degree > 0; Degree -= 10)
+    {
+      Servo_SetAngle(Degree);
+      HAL_Delay(100);
+    }
 
   }
   /* USER CODE END 3 */
@@ -160,9 +170,9 @@ static void MX_TIM4_Init(void)
 
   /* USER CODE END TIM4_Init 1 */
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 800;
+  htim4.Init.Prescaler = 8-1;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 2000-1;
+  htim4.Init.Period = 20000-1;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
@@ -185,7 +195,7 @@ static void MX_TIM4_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 100;
+  sConfigOC.Pulse = 1500;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
@@ -214,6 +224,14 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/* 0 do -> xung 500us, 180 do -> xung 2500us, chu ky 20ms */
+void Servo_SetAngle(uint8_t angle)
+{
+  uint32_t pulse;
+  if (angle > 180) angle = 180;
+  pulse = 500 + ((uint32_t)angle * 2000) / 180;
+  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, pulse);
+}
 
 /* USER CODE END 4 */
 
